@@ -13,11 +13,21 @@ import os
 import threading
 from pygame import mixer
 import random
+import RPi.GPIO as GPIO
+from enum import Enum
+
+GPIO.setmode(GPIO.BCM)  # 设置BCM编码
+
+KEY_LEFT = 23  # BCM引脚
+KEY_RIGHT = 22
 
 
 logging.basicConfig(level=logging.INFO)
 
 data_path = 'data'
+
+GPIO.setup(KEY_LEFT, GPIO.IN, GPIO.PUD_UP)  # 设置输入，上拉
+GPIO.setup(KEY_RIGHT, GPIO.IN, GPIO.PUD_UP)
 
 
 class Items():
@@ -67,7 +77,7 @@ class Items():
 
         def run(self):  # 把要执行的代码写到run函数里面 线程在创建后会直接运行run函数
             self.father.display_pic(self.pic_path)
-    
+
     def display_pic_and_play_sound(self, bmp_path, mp3_path):
         thread1 = self.Display_pic_thread(self, bmp_path)
         thread1.start()
@@ -91,49 +101,52 @@ class Items():
         logging.debug(f"self.index:{self.index}")
         bmp_path, mp3_path = self.item_list[self.index]
         self.display_pic_and_play_sound(bmp_path, mp3_path)
-    
+
     def display_random_pic(self):
         bmp_path, mp3_path = random.choice(self.item_list)
         self.display_pic_and_play_sound(bmp_path, mp3_path)
 
 
-def readchar():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
+key_state = {KEY_LEFT: GPIO.HIGH, KEY_RIGHT: GPIO.HIGH}
 
 
-def readkey(getchar_fn=None):
-    getchar = getchar_fn or readchar
-    c1 = getchar()
-    if ord(c1) != 0x1b:
-        return c1
-    c2 = getchar()
-    if ord(c2) != 0x5b:
-        return c1
-    c3 = getchar()
-    return chr(0x10 + ord(c3) - 65)
+def key_callback(channel):
+    if (key_state[channel] == GPIO.LOW):
+        key_state[channel] = GPIO.HIGH
+    else:
+        key_state[channel] = GPIO.LOW
 
 
-items = Items(data_path)
+# 在通道上添加临界值检测，忽略由于开关抖动引起的小于 200ms 的边缘操作
+GPIO.add_event_detect(KEY_LEFT, GPIO.BOTH,
+                      callback=key_callback, bouncetime=200)
+GPIO.add_event_detect(KEY_RIGHT, GPIO.BOTH,
+                      callback=key_callback, bouncetime=200)
 
-while True:
-    key = readkey()
-    logging.debug(f"key:{key} ord(key):{ord(key)}")
-    if key == 'q' or ord(key) == 27:
-        break
-    elif ord(key) == 16 or ord(key) == 19:
-        # 16:up 19:left
-        items.display_up_pic()
-    elif ord(key) == 17 or ord(key) == 18:
-        # 17:down 18:right
-        items.display_down_pic()
-    elif key == 'r':
-        while True:
-            items.display_random_pic()
-            time.sleep(10)
+
+class State(Enum):
+    none = 0
+    repeat = 1
+
+
+state = State.none
+repeat_start_time = None
+
+
+if __name__ == '__main__':
+    items = Items(data_path)
+
+    while True:
+        if key_state[KEY_LEFT] == GPIO.LOW and key_state[KEY_RIGHT] == GPIO.LOW:
+            state = State.repeat
+        elif key_state[KEY_LEFT] == GPIO.LOW:
+            state = State.none
+            items.display_up_pic()
+        elif key_state[KEY_RIGHT] == GPIO.LOW:
+            state = State.none
+            items.display_down_pic()
+
+        if state == State.repeat:
+            if repeat_start_time == None or time.time()-repeat_start_time > 20:
+                repeat_start_time = time.time()
+                items.display_random_pic()
