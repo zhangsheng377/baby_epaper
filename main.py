@@ -118,11 +118,11 @@ def key_callback(channel):
         key_state[channel] = GPIO.LOW
 
 
-# 在通道上添加临界值检测，忽略由于开关抖动引起的小于 200ms 的边缘操作
+# 在通道上添加临界值检测，忽略由于开关抖动引起的边缘操作
 GPIO.add_event_detect(KEY_LEFT, GPIO.BOTH,
-                      callback=key_callback, bouncetime=200)
+                      callback=key_callback, bouncetime=10)
 GPIO.add_event_detect(KEY_RIGHT, GPIO.BOTH,
-                      callback=key_callback, bouncetime=200)
+                      callback=key_callback, bouncetime=10)
 
 
 class State(Enum):
