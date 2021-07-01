@@ -79,11 +79,15 @@ class Items():
         def run(self):  # 把要执行的代码写到run函数里面 线程在创建后会直接运行run函数
             self.father.display_pic(self.pic_path)
 
-    def display_pic_and_play_sound(self, bmp_path, mp3_path):
+    def display_pic_and_play_sound(self, bmp_path, mp3_path, music_time=None):
         thread1 = self.Display_pic_thread(self, bmp_path)
         thread1.start()
         mixer.music.load(mp3_path)
         while threading.activeCount() > 1:
+            mixer.music.play()
+            time.sleep(5)
+        display_over_time = time.time()
+        while music_time and time.time()-display_over_time < music_time:
             mixer.music.play()
             time.sleep(5)
 
@@ -105,7 +109,7 @@ class Items():
 
     def display_random_pic(self):
         bmp_path, mp3_path = random.choice(self.item_list)
-        self.display_pic_and_play_sound(bmp_path, mp3_path)
+        self.display_pic_and_play_sound(bmp_path, mp3_path, music_time=20)
 
 
 key_state = {KEY_LEFT: GPIO.HIGH, KEY_RIGHT: GPIO.HIGH}
@@ -131,28 +135,22 @@ class State(Enum):
 
 
 state = State.none
-repeat_start_time = None
+last_press_time = time.time()
 
 
 if __name__ == '__main__':
     items = Items(data_path)
 
     while True:
-        if key_state[KEY_LEFT] == GPIO.LOW and key_state[KEY_RIGHT] == GPIO.LOW:
-            logging.info("both low")
-            state = State.repeat
-        elif key_state[KEY_LEFT] == GPIO.LOW:
+        if key_state[KEY_LEFT] == GPIO.LOW:
             logging.info("KEY_LEFT low")
-            state = State.none
             items.display_up_pic()
+            last_press_time = time.time()
         elif key_state[KEY_RIGHT] == GPIO.LOW:
             logging.info("KEY_RIGHT low")
-            state = State.none
             items.display_down_pic()
+            last_press_time = time.time()
 
-        if state == State.repeat:
-            logging.info("state repeat")
-            if repeat_start_time == None or time.time()-repeat_start_time > 20:
-                logging.info("display_random_pic")
-                repeat_start_time = time.time()
-                items.display_random_pic()
+        if time.time()-last_press_time > 30:
+            logging.info("display_random_pic")
+            items.display_random_pic()
