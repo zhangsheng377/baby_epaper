@@ -26,6 +26,10 @@ KEY_RIGHT = 22
 logging.basicConfig(level=logging.DEBUG, filename="mylog.log")
 
 data_path = 'data'
+music_gap_time = 5
+random_music_time = 0
+random_display_start_time = 30
+random_display_gap_time = 20
 
 GPIO.setup(KEY_LEFT, GPIO.IN, GPIO.PUD_UP)  # 设置输入，上拉
 GPIO.setup(KEY_RIGHT, GPIO.IN, GPIO.PUD_UP)
@@ -85,11 +89,11 @@ class Items():
         mixer.music.load(mp3_path)
         while threading.activeCount() > 1:
             mixer.music.play()
-            time.sleep(5)
+            time.sleep(music_gap_time)
         display_over_time = time.time()
         while music_time and time.time()-display_over_time < music_time:
             mixer.music.play()
-            time.sleep(5)
+            time.sleep(music_gap_time)
 
     def display_up_pic(self):
         self.index += 1
@@ -109,7 +113,8 @@ class Items():
 
     def display_random_pic(self):
         bmp_path, mp3_path = random.choice(self.item_list)
-        self.display_pic_and_play_sound(bmp_path, mp3_path, music_time=20)
+        self.display_pic_and_play_sound(
+            bmp_path, mp3_path, music_time=random_music_time)
 
 
 key_state = {KEY_LEFT: GPIO.HIGH, KEY_RIGHT: GPIO.HIGH}
@@ -136,6 +141,7 @@ class State(Enum):
 
 state = State.none
 last_press_time = time.time()
+last_random_display_time = time.time()
 
 
 if __name__ == '__main__':
@@ -151,6 +157,7 @@ if __name__ == '__main__':
             items.display_down_pic()
             last_press_time = time.time()
 
-        if time.time()-last_press_time > 30:
+        if time.time()-last_press_time > random_display_start_time and time.time()-last_random_display_time > random_display_gap_time:
             logging.info("display_random_pic")
             items.display_random_pic()
+            last_random_display_time = time.time()
