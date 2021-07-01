@@ -22,7 +22,8 @@ KEY_LEFT = 23  # BCM引脚
 KEY_RIGHT = 22
 
 
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG, filename="mylog.log")
 
 data_path = 'data'
 
@@ -138,15 +139,20 @@ if __name__ == '__main__':
 
     while True:
         if key_state[KEY_LEFT] == GPIO.LOW and key_state[KEY_RIGHT] == GPIO.LOW:
+            logging.info("both low")
             state = State.repeat
         elif key_state[KEY_LEFT] == GPIO.LOW:
+            logging.info("KEY_LEFT low")
             state = State.none
             items.display_up_pic()
         elif key_state[KEY_RIGHT] == GPIO.LOW:
+            logging.info("KEY_RIGHT low")
             state = State.none
             items.display_down_pic()
 
         if state == State.repeat:
+            logging.info("state repeat")
             if repeat_start_time == None or time.time()-repeat_start_time > 20:
+                logging.info("display_random_pic")
                 repeat_start_time = time.time()
                 items.display_random_pic()
