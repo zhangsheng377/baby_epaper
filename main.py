@@ -27,9 +27,9 @@ logging.basicConfig(level=logging.DEBUG, filename="mylog.log")
 
 data_path = 'data'
 music_gap_time = 5
-random_music_time = 5
+random_music_time = 10
 random_display_start_time = 30
-random_display_gap_time = 15
+random_display_gap_time = 10
 
 GPIO.setup(KEY_LEFT, GPIO.IN, GPIO.PUD_UP)  # 设置输入，上拉
 GPIO.setup(KEY_RIGHT, GPIO.IN, GPIO.PUD_UP)
