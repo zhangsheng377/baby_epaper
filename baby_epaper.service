@@ -1,0 +1,14 @@
+[Unit]
+Description=baby_epaper
+After=network.target
+
+[Service]
+ExecStart=bash run.sh
+WorkingDirectory=/home/pi/baby_epaper
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
