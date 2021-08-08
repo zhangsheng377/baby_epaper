@@ -61,6 +61,8 @@ class Items():
             # pic_path = '/home/pi/e-Paper/RaspberryPi_JetsonNano/python/pic/4in01-1.bmp'
             logging.debug(f"read bmp file. {pic_path}")
             Himage = Image.open(pic_path)
+            Himage = Himage.transpose(Image.FLIP_LEFT_RIGHT)     #水平翻转
+            Himage = Himage.transpose(Image.FLIP_TOP_BOTTOM)    #垂直翻转
             logging.debug(
                 f"display start. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             self.epd.display(self.epd.getbuffer(Himage))
