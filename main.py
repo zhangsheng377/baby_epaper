@@ -30,9 +30,12 @@ music_gap_time = 5
 random_music_time = 10
 random_display_start_time = 30
 random_display_gap_time = 10
+wait_display_to_p_music_time = 5
 
 GPIO.setup(KEY_LEFT, GPIO.IN, GPIO.PUD_UP)  # 设置输入，上拉
 GPIO.setup(KEY_RIGHT, GPIO.IN, GPIO.PUD_UP)
+
+mixer.init()
 
 
 class Items():
@@ -42,33 +45,39 @@ class Items():
         logging.info("init")
         self.epd.init()
         # self.epd.Clear()
-        mixer.init()
+        self.mp3_path = None
+        mixer_thread = self.Mixer_thread(self)
+        mixer_thread.start()
 
-        self.item_list = []
-        for item_name in os.listdir(data_path):
-            bmp_path = os.path.join(data_path, item_name, item_name+'.bmp')
-            mp3_path = os.path.join(data_path, item_name, item_name+'.mp3')
-            logging.debug(f"bmp_path:{bmp_path} mp3_path:{mp3_path}")
-            if os.path.isfile(bmp_path):
-                self.item_list.append((bmp_path, mp3_path))
+        self.item_list = get_item_list(data_path)
         logging.info(f"len(self.item_list):{len(self.item_list)}")
         self.index = -1
 
+    class Mixer_thread (threading.Thread):  # 继承父类threading.Thread
+        def __init__(self, father):
+            threading.Thread.__init__(self)
+            self.father = father
+
+        def run(self):  # 把要执行的代码写到run函数里面 线程在创建后会直接运行run函数
+            while True:
+                if self.father.mp3_path is not None:
+                    mixer.music.load(self.father.mp3_path)
+                    mixer.music.play()
+                    while mixer.music.get_busy():
+                        time.sleep(0.1)
+                time.sleep(music_gap_time)
+
     def display_pic(self, pic_path):
         try:
-            # pic_path = '/home/pi/baby_epaper/epaper_test.bmp'
-            # pic_path = '/home/pi/baby_epaper/test.bmp'
-            # pic_path = '/home/pi/e-Paper/RaspberryPi_JetsonNano/python/pic/4in01-1.bmp'
             logging.debug(f"read bmp file. {pic_path}")
             Himage = Image.open(pic_path)
-            Himage = Himage.transpose(Image.FLIP_LEFT_RIGHT)     #水平翻转
-            Himage = Himage.transpose(Image.FLIP_TOP_BOTTOM)    #垂直翻转
+            Himage = Himage.transpose(Image.FLIP_LEFT_RIGHT)  # 水平翻转
+            Himage = Himage.transpose(Image.FLIP_TOP_BOTTOM)  # 垂直翻转
             logging.debug(
                 f"display start. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             self.epd.display(self.epd.getbuffer(Himage))
             logging.debug(
                 f"display over. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            # time.sleep(10)
         except IOError as e:
             logging.info(e)
         except KeyboardInterrupt:
@@ -86,16 +95,15 @@ class Items():
             self.father.display_pic(self.pic_path)
 
     def display_pic_and_play_sound(self, bmp_path, mp3_path, music_time=None):
-        thread1 = self.Display_pic_thread(self, bmp_path)
-        thread1.start()
-        mixer.music.load(mp3_path)
-        while threading.activeCount() > 1:
-            mixer.music.play()
-            time.sleep(music_gap_time)
-        display_over_time = time.time()
-        while music_time and time.time()-display_over_time < music_time:
-            mixer.music.play()
-            time.sleep(music_gap_time)
+        self.mp3_path = None
+        display_thread = self.Display_pic_thread(self, bmp_path)
+        display_thread.start()
+        display_start_time = time.time()
+        while time.time()-display_start_time < wait_display_to_p_music_time:
+            time.sleep(0.1)
+        self.mp3_path = mp3_path
+        while display_thread.is_alive():
+            time.sleep(0.1)
 
     def display_up_pic(self):
         self.index += 1
@@ -119,6 +127,17 @@ class Items():
             bmp_path, mp3_path, music_time=random_music_time)
 
 
+def get_item_list(data_path):
+    item_list = []
+    for item_name in os.listdir(data_path):
+        bmp_path = os.path.join(data_path, item_name, item_name+'.bmp')
+        mp3_path = os.path.join(data_path, item_name, item_name+'.mp3')
+        logging.debug(f"bmp_path:{bmp_path} mp3_path:{mp3_path}")
+        if os.path.isfile(bmp_path):
+            item_list.append((bmp_path, mp3_path))
+    return item_list
+
+
 key_state = {KEY_LEFT: GPIO.HIGH, KEY_RIGHT: GPIO.HIGH}
 
 
@@ -138,12 +157,6 @@ GPIO.add_event_detect(KEY_RIGHT, GPIO.BOTH,
                       callback=key_callback, bouncetime=10)
 
 
-class State(Enum):
-    none = 0
-    repeat = 1
-
-
-state = State.none
 last_press_time = time.time()
 last_random_display_time = time.time()
 
