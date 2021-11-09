@@ -135,6 +135,7 @@ def get_item_list(data_path):
         logging.debug(f"bmp_path:{bmp_path} mp3_path:{mp3_path}")
         if os.path.isfile(bmp_path):
             item_list.append((bmp_path, mp3_path))
+    item_list = sorted(item_list, key=lambda item: item[0])
     return item_list
 
 
