@@ -26,7 +26,7 @@ KEY_RIGHT = 22
 logging.basicConfig(level=logging.DEBUG, filename="mylog.log")
 
 data_path = 'data'
-music_gap_time = 5
+music_gap_time = 2
 random_music_time = 10
 random_display_start_time = 30
 random_display_gap_time = 10
