@@ -28,7 +28,6 @@ logging.basicConfig(level=logging.DEBUG, filename="mylog.log")
 
 mp3_dir = 'data_pic_music/music'
 pic_dir = 'data_pic_music/pic'
-music_gap_time = 2
 random_display_start_time = 30
 random_display_gap_time = 10
 
@@ -54,11 +53,10 @@ class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
                 self.index = self.target_index
                 mixer.music.load(self.mp3_paths[self.index])
                 mixer.music.play()
-                while mixer.music.get_busy():
+                while self.target_index == self.index and mixer.music.get_busy():
                     time.sleep(0.1)
             else:
                 self.index = self.target_index
-            time.sleep(music_gap_time)
 
     def pre_music(self):
         self.target_index = (self.index + len(self.mp3_paths) - 1) % len(self.mp3_paths)
