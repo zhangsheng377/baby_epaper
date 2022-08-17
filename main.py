@@ -111,6 +111,7 @@ class ShowPic:
     def display_pic(self, bmp_path):
         if self.display_thread:
             threading.Thread._Thread__stop(self.display_thread)
+            self.display_thread = None
         self.index = self.target_index
         self.display_thread = self.Display_pic_thread(self, bmp_path)
         self.display_thread.start()
@@ -128,8 +129,9 @@ class ShowPic:
         self.display_pic(bmp_path)
 
     def display_random_pic(self):
-        while self.target_index == self.index and self.display_thread.is_alive():
-            time.sleep(0.1)
+        if self.display_thread:
+            while self.target_index == self.index and self.display_thread.is_alive():
+                time.sleep(0.1)
         self.target_index = random.choice(range(len(self.item_list)))
         logging.debug(f"self.target_index:{self.target_index}")
         bmp_path = self.item_list[self.target_index]
