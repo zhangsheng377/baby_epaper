@@ -76,9 +76,12 @@ class Items:
 
         self.item_list = glob.glob(os.path.join(pic_dir, '*.bmp'))
         logging.info(f"len(self.item_list):{len(self.item_list)}")
-        self.index = -1
+        self.index = 0
+        self.target_index = self.index
 
-    def display_pic(self, pic_path):
+        self.display_thread = None
+
+    def _display_pic(self, pic_path):
         try:
             logging.debug(f"read bmp file. {pic_path}")
             Himage = Image.open(pic_path)
@@ -96,20 +99,38 @@ class Items:
             epd4in01f.epdconfig.module_exit()
             exit()
 
+    class Display_pic_thread (threading.Thread):  # 继承父类threading.Thread
+        def __init__(self, father, pic_path):
+            threading.Thread.__init__(self)
+            self.pic_path = pic_path
+            self.father = father
+
+        def run(self):  # 把要执行的代码写到run函数里面 线程在创建后会直接运行run函数
+            self.father._display_pic(self.pic_path)
+
+    def display_pic(self, bmp_path):
+        self.index = self.target_index
+        display_thread = self.Display_pic_thread(self, bmp_path)
+        display_thread.start()
+        while self.target_index == self.index and display_thread.is_alive():
+            time.sleep(0.1)
+
     def display_up_pic(self):
-        self.index = (self.index + 1) % len(self.item_list)
-        logging.debug(f"self.index:{self.index}")
-        bmp_path = self.item_list[self.index]
+        self.target_index = (self.index + 1) % len(self.item_list)
+        logging.debug(f"self.target_index:{self.target_index}")
+        bmp_path = self.item_list[self.target_index]
         self.display_pic(bmp_path)
 
     def display_down_pic(self):
-        self.index = (self.index + len(self.item_list) - 1) % len(self.item_list)
-        logging.debug(f"self.index:{self.index}")
-        bmp_path = self.item_list[self.index]
+        self.target_index = (self.index + len(self.item_list) - 1) % len(self.item_list)
+        logging.debug(f"self.target_index:{self.target_index}")
+        bmp_path = self.item_list[self.target_index]
         self.display_pic(bmp_path)
 
     def display_random_pic(self):
-        bmp_path = random.choice(self.item_list)
+        self.target_index = random.choice(range(len(self.item_list)))
+        logging.debug(f"self.target_index:{self.target_index}")
+        bmp_path = self.item_list[self.target_index]
         self.display_pic(bmp_path)
 
 
@@ -135,22 +156,22 @@ last_press_time = time.time()
 last_random_display_time = time.time()
 
 if __name__ == '__main__':
-    items = Items(pic_dir)
+    # items = Items(pic_dir)
     mixer_thread = Mixer_thread(mp3_dir)
     mixer_thread.start()
 
     while True:
         if key_state[KEY_LEFT] == GPIO.LOW:
             logging.info("KEY_LEFT low")
-            items.display_up_pic()
+            # items.display_up_pic()
             mixer_thread.pre_music()
             last_press_time = time.time()
         elif key_state[KEY_RIGHT] == GPIO.LOW:
             logging.info("KEY_RIGHT low")
-            items.display_down_pic()
+            # items.display_down_pic()
             mixer_thread.next_music()
             last_press_time = time.time()
         if time.time() - last_press_time > random_display_start_time and time.time() - last_random_display_time > random_display_gap_time:
             logging.info("display_random_pic")
-            items.display_random_pic()
+            # items.display_random_pic()
             last_random_display_time = time.time()
