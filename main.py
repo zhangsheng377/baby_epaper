@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
+import ctypes
 import glob
+import inspect
 
 from PIL import Image, ImageDraw, ImageFont
 from waveshare_epd import epd4in01f
@@ -69,6 +71,25 @@ class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
         logging.debug(f"next_music self.target_index:{self.target_index}")
 
 
+def _async_raise(tid, exctype):
+    """raises the exception, performs cleanup if needed"""
+    tid = ctypes.c_long(tid)
+    if not inspect.isclass(exctype):
+        exctype = type(exctype)
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+    if res == 0:
+        raise ValueError("invalid thread id")
+    elif res != 1:
+        # """if it returns a number greater than one, you're in trouble,
+        # and you should call it again with exc=NULL to revert the effect"""
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+
+
+def stop_thread(thread):
+    _async_raise(thread.ident, SystemExit)
+
+
 class ShowPic:
     def __init__(self, pic_dir):
         logging.info("epd4in01f Demo")
@@ -103,7 +124,7 @@ class ShowPic:
             epd4in01f.epdconfig.module_exit()
             exit()
 
-    class Display_pic_thread (threading.Thread):  # 继承父类threading.Thread
+    class Display_pic_thread(threading.Thread):  # 继承父类threading.Thread
         def __init__(self, father, pic_path):
             threading.Thread.__init__(self)
             self.pic_path = pic_path
@@ -114,8 +135,10 @@ class ShowPic:
 
     def display_pic(self, bmp_path):
         if self.display_thread:
-            threading.Thread._Thread__stop(self.display_thread)
+            logging.debug(f"ShowPic display_pic self.display_thread:{self.display_thread}")
+            stop_thread(self.display_thread)
             self.display_thread = None
+            logging.debug(f"ShowPic display_pic self.display_thread:{self.display_thread}")
         self.index = self.target_index
         self.display_thread = self.Display_pic_thread(self, bmp_path)
         self.display_thread.start()
@@ -134,10 +157,12 @@ class ShowPic:
 
     def display_random_pic(self):
         if self.display_thread:
-            logging.debug(f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index} self.display_thread:{self.display_thread}")
+            logging.debug(
+                f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index} self.display_thread:{self.display_thread}")
             while self.target_index == self.index and self.display_thread.is_alive():
                 time.sleep(0.1)
-            logging.debug(f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index} self.display_thread:{self.display_thread} thread over")
+            logging.debug(
+                f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index} self.display_thread:{self.display_thread} thread over")
         while self.target_index == self.index:
             self.target_index = random.choice(range(len(self.item_list)))
         logging.debug(f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index}")
