@@ -182,6 +182,9 @@ key_state = {KEY_LEFT: GPIO.HIGH, KEY_RIGHT: GPIO.HIGH}
 
 def key_callback(channel):
     global last_press_time
+    if time.time() - last_press_time < 5:
+        return
+    
     if key_state[channel] == GPIO.LOW:
         key_state[channel] = GPIO.HIGH
     else:
@@ -191,9 +194,9 @@ def key_callback(channel):
 
 # 在通道上添加临界值检测，忽略由于开关抖动引起的边缘操作
 GPIO.add_event_detect(KEY_LEFT, GPIO.BOTH,
-                      callback=key_callback, bouncetime=500)
+                      callback=key_callback, bouncetime=20)
 GPIO.add_event_detect(KEY_RIGHT, GPIO.BOTH,
-                      callback=key_callback, bouncetime=500)
+                      callback=key_callback, bouncetime=20)
 
 last_press_time = time.time()
 last_random_display_time = time.time()
