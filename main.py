@@ -41,6 +41,7 @@ class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
     def __init__(self, mp3_dir):
         threading.Thread.__init__(self)
         self.mp3_paths = glob.glob(os.path.join(mp3_dir, '*.mp3'))
+        logging.info(f"len(self.mp3_paths):{len(self.mp3_paths)}")
         self.index = 0
         self.target_index = self.index
 
@@ -49,6 +50,7 @@ class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
             if len(self.mp3_paths) > 1:
                 while self.target_index == self.index:  # 相等说明没有外界修改
                     self.target_index = random.choice(range(len(self.mp3_paths)))
+            logging.debug(f"Mixer_thread run self.target_index:{self.target_index}")
             if 0 <= self.target_index < len(self.mp3_paths):  # target_index有效
                 self.index = self.target_index
                 mixer.music.load(self.mp3_paths[self.index])
@@ -60,9 +62,11 @@ class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
 
     def pre_music(self):
         self.target_index = (self.index + len(self.mp3_paths) - 1) % len(self.mp3_paths)
+        logging.debug(f"pre_music self.target_index:{self.target_index}")
 
     def next_music(self):
         self.target_index = (self.index + 1) % len(self.mp3_paths)
+        logging.debug(f"next_music self.target_index:{self.target_index}")
 
 
 class ShowPic:
@@ -75,7 +79,7 @@ class ShowPic:
         self.mp3_path = None
 
         self.item_list = glob.glob(os.path.join(pic_dir, '*.bmp'))
-        logging.info(f"len(self.item_list):{len(self.item_list)}")
+        logging.info(f"ShowPic len(self.item_list):{len(self.item_list)}")
         self.index = 0
         self.target_index = self.index
 
@@ -118,22 +122,25 @@ class ShowPic:
 
     def display_up_pic(self):
         self.target_index = (self.index + 1) % len(self.item_list)
-        logging.debug(f"self.target_index:{self.target_index}")
+        logging.debug(f"ShowPic self.target_index:{self.target_index}")
         bmp_path = self.item_list[self.target_index]
         self.display_pic(bmp_path)
 
     def display_down_pic(self):
         self.target_index = (self.index + len(self.item_list) - 1) % len(self.item_list)
-        logging.debug(f"self.target_index:{self.target_index}")
+        logging.debug(f"ShowPic self.target_index:{self.target_index}")
         bmp_path = self.item_list[self.target_index]
         self.display_pic(bmp_path)
 
     def display_random_pic(self):
         if self.display_thread:
+            logging.debug(f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index} self.display_thread:{self.display_thread}")
             while self.target_index == self.index and self.display_thread.is_alive():
                 time.sleep(0.1)
-        self.target_index = random.choice(range(len(self.item_list)))
-        logging.debug(f"self.target_index:{self.target_index}")
+            logging.debug(f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index} self.display_thread:{self.display_thread} thread over")
+        while self.target_index == self.index:
+            self.target_index = random.choice(range(len(self.item_list)))
+        logging.debug(f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index}")
         bmp_path = self.item_list[self.target_index]
         self.display_pic(bmp_path)
 
