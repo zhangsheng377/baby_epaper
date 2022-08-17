@@ -187,6 +187,8 @@ key_state = {KEY_LEFT: KeyState.PRESS_UP, KEY_RIGHT: KeyState.PRESS_UP}
 
 def key_callback(channel):
     global last_press_time
+    if time.time() - last_press_time < 2:
+        return
     key_state[channel] = KeyState.PRESS_DOWN
     last_press_time = time.time()
 
