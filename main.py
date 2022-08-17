@@ -134,7 +134,7 @@ class ShowPic:
             self.father._display_pic(self.pic_path)
 
     def display_pic(self, bmp_path):
-        if self.display_thread:
+        if self.display_thread and self.display_thread.is_alive():
             logging.debug(f"ShowPic display_pic self.display_thread:{self.display_thread}")
             stop_thread(self.display_thread)
             self.display_thread = None
