@@ -191,9 +191,9 @@ def key_callback(channel):
 
 # 在通道上添加临界值检测，忽略由于开关抖动引起的边缘操作
 GPIO.add_event_detect(KEY_LEFT, GPIO.BOTH,
-                      callback=key_callback, bouncetime=80)
+                      callback=key_callback, bouncetime=500)
 GPIO.add_event_detect(KEY_RIGHT, GPIO.BOTH,
-                      callback=key_callback, bouncetime=80)
+                      callback=key_callback, bouncetime=500)
 
 last_press_time = time.time()
 last_random_display_time = time.time()
