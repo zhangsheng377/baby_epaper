@@ -177,26 +177,24 @@ class ShowPic(threading.Thread):
             time.sleep(1)
 
 
-key_state = {KEY_LEFT: GPIO.HIGH, KEY_RIGHT: GPIO.HIGH}
-key_state_old = {KEY_LEFT: GPIO.HIGH, KEY_RIGHT: GPIO.HIGH}
+class KeyState(Enum):
+    PRESS_DOWN = 0
+    PRESS_UP = 1
+
+
+key_state = {KEY_LEFT: KeyState.PRESS_UP, KEY_RIGHT: KeyState.PRESS_UP}
 
 
 def key_callback(channel):
     global last_press_time
-    # if time.time() - last_press_time < 5:
-    #     return
-
-    if key_state[channel] == GPIO.LOW:
-        key_state[channel] = GPIO.HIGH
-    else:
-        key_state[channel] = GPIO.LOW
+    key_state[channel] = KeyState.PRESS_DOWN
     last_press_time = time.time()
 
 
 # 在通道上添加临界值检测，忽略由于开关抖动引起的边缘操作
-GPIO.add_event_detect(KEY_LEFT, GPIO.BOTH,
+GPIO.add_event_detect(KEY_LEFT, GPIO.RISING,
                       callback=key_callback, bouncetime=20)
-GPIO.add_event_detect(KEY_RIGHT, GPIO.BOTH,
+GPIO.add_event_detect(KEY_RIGHT, GPIO.RISING,
                       callback=key_callback, bouncetime=20)
 
 last_press_time = time.time()
@@ -209,18 +207,18 @@ if __name__ == '__main__':
     mixer_thread.start()
 
     while True:
-        if key_state[KEY_LEFT] != key_state_old[KEY_LEFT] and key_state[KEY_LEFT] == GPIO.LOW:
-            logging.info("KEY_LEFT low")
-            key_state_old[KEY_LEFT] = key_state[KEY_LEFT]
+        if key_state[KEY_LEFT] == KeyState.PRESS_DOWN:
+            logging.info("KEY_LEFT PRESS_DOWN")
             # show_pic.display_up_pic()
             mixer_thread.pre_music()
             last_press_time = time.time()
-        elif key_state[KEY_RIGHT] != key_state_old[KEY_RIGHT] and key_state[KEY_RIGHT] == GPIO.LOW:
+            key_state[KEY_LEFT] = KeyState.PRESS_UP
+        elif key_state[KEY_RIGHT] == KeyState.PRESS_DOWN:
             logging.info("KEY_RIGHT low")
-            key_state_old[KEY_RIGHT] = key_state[KEY_RIGHT]
             # show_pic.display_down_pic()
             mixer_thread.next_music()
             last_press_time = time.time()
+            key_state[KEY_RIGHT] = KeyState.PRESS_UP
         if time.time() - last_press_time > random_display_start_time and time.time() - last_random_display_time > random_display_gap_time:
             logging.info("display_random_pic")
             # show_pic.display_random_pic()
