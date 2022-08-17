@@ -47,9 +47,10 @@ class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
 
     def run(self):  # 把要执行的代码写到run函数里面 线程在创建后会直接运行run函数
         while True:
-            if self.target_index == self.index:
-                self.target_index = random.choice(range(len(self.mp3_paths)))
-            if 0 <= self.target_index < len(self.mp3_paths):
+            if len(self.mp3_paths) > 1:
+                while self.target_index == self.index:  # 相等说明没有外界修改
+                    self.target_index = random.choice(range(len(self.mp3_paths)))
+            if 0 <= self.target_index < len(self.mp3_paths):  # target_index有效
                 self.index = self.target_index
                 mixer.music.load(self.mp3_paths[self.index])
                 mixer.music.play()
@@ -144,12 +145,13 @@ if __name__ == '__main__':
         if key_state[KEY_LEFT] == GPIO.LOW:
             logging.info("KEY_LEFT low")
             items.display_up_pic()
+            mixer_thread.pre_music()
             last_press_time = time.time()
         elif key_state[KEY_RIGHT] == GPIO.LOW:
             logging.info("KEY_RIGHT low")
             items.display_down_pic()
+            mixer_thread.next_music()
             last_press_time = time.time()
-
         if time.time() - last_press_time > random_display_start_time and time.time() - last_random_display_time > random_display_gap_time:
             logging.info("display_random_pic")
             items.display_random_pic()
