@@ -178,13 +178,14 @@ class ShowPic(threading.Thread):
 
 
 key_state = {KEY_LEFT: GPIO.HIGH, KEY_RIGHT: GPIO.HIGH}
+key_state_old = {KEY_LEFT: GPIO.HIGH, KEY_RIGHT: GPIO.HIGH}
 
 
 def key_callback(channel):
     global last_press_time
-    if time.time() - last_press_time < 5:
-        return
-    
+    # if time.time() - last_press_time < 5:
+    #     return
+
     if key_state[channel] == GPIO.LOW:
         key_state[channel] = GPIO.HIGH
     else:
@@ -208,13 +209,15 @@ if __name__ == '__main__':
     mixer_thread.start()
 
     while True:
-        if key_state[KEY_LEFT] == GPIO.LOW:
+        if key_state[KEY_LEFT] != key_state_old[KEY_LEFT] and key_state[KEY_LEFT] == GPIO.LOW:
             logging.info("KEY_LEFT low")
+            key_state_old[KEY_LEFT] = key_state[KEY_LEFT]
             # show_pic.display_up_pic()
             mixer_thread.pre_music()
             last_press_time = time.time()
-        elif key_state[KEY_RIGHT] == GPIO.LOW:
+        elif key_state[KEY_RIGHT] != key_state_old[KEY_RIGHT] and key_state[KEY_RIGHT] == GPIO.LOW:
             logging.info("KEY_RIGHT low")
+            key_state_old[KEY_RIGHT] = key_state[KEY_RIGHT]
             # show_pic.display_down_pic()
             mixer_thread.next_music()
             last_press_time = time.time()
