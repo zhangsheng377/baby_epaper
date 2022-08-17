@@ -71,27 +71,28 @@ class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
         logging.debug(f"next_music self.target_index:{self.target_index}")
 
 
-def _async_raise(tid, exctype):
-    """raises the exception, performs cleanup if needed"""
-    tid = ctypes.c_long(tid)
-    if not inspect.isclass(exctype):
-        exctype = type(exctype)
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
-    if res == 0:
-        raise ValueError("invalid thread id")
-    elif res != 1:
-        # """if it returns a number greater than one, you're in trouble,
-        # and you should call it again with exc=NULL to revert the effect"""
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
-        raise SystemError("PyThreadState_SetAsyncExc failed")
+# def _async_raise(tid, exctype):
+#     """raises the exception, performs cleanup if needed"""
+#     tid = ctypes.c_long(tid)
+#     if not inspect.isclass(exctype):
+#         exctype = type(exctype)
+#     res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+#     if res == 0:
+#         raise ValueError("invalid thread id")
+#     elif res != 1:
+#         # """if it returns a number greater than one, you're in trouble,
+#         # and you should call it again with exc=NULL to revert the effect"""
+#         ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+#         raise SystemError("PyThreadState_SetAsyncExc failed")
+#
+#
+# def stop_thread(thread):
+#     _async_raise(thread.ident, SystemExit)
 
 
-def stop_thread(thread):
-    _async_raise(thread.ident, SystemExit)
-
-
-class ShowPic:
+class ShowPic(threading.Thread):
     def __init__(self, pic_dir):
+        threading.Thread.__init__(self)
         logging.info("epd4in01f Demo")
         self.epd = epd4in01f.EPD()
         logging.info("init")
@@ -136,9 +137,10 @@ class ShowPic:
     def display_pic(self, bmp_path):
         if self.display_thread and self.display_thread.is_alive():
             logging.debug(f"ShowPic display_pic self.display_thread:{self.display_thread}")
-            stop_thread(self.display_thread)
-            self.display_thread = None
-            logging.debug(f"ShowPic display_pic self.display_thread:{self.display_thread}")
+            # stop_thread(self.display_thread)
+            # self.display_thread = None
+            # logging.debug(f"ShowPic display_pic self.display_thread:{self.display_thread}")
+            return
         self.index = self.target_index
         self.display_thread = self.Display_pic_thread(self, bmp_path)
         self.display_thread.start()
@@ -159,7 +161,7 @@ class ShowPic:
         if self.display_thread:
             logging.debug(
                 f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index} self.display_thread:{self.display_thread}")
-            while self.target_index == self.index and self.display_thread.is_alive():
+            while self.display_thread.is_alive():  # 按键不控制图片
                 time.sleep(0.1)
             logging.debug(
                 f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index} self.display_thread:{self.display_thread} thread over")
@@ -168,6 +170,11 @@ class ShowPic:
         logging.debug(f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index}")
         bmp_path = self.item_list[self.target_index]
         self.display_pic(bmp_path)
+
+    def run(self):  # 把要执行的代码写到run函数里面 线程在创建后会直接运行run函数
+        while True:
+            self.display_random_pic()
+            time.sleep(1)
 
 
 key_state = {KEY_LEFT: GPIO.HIGH, KEY_RIGHT: GPIO.HIGH}
@@ -193,7 +200,7 @@ last_random_display_time = time.time()
 
 if __name__ == '__main__':
     show_pic = ShowPic(pic_dir)
-    show_pic.display_random_pic()
+    show_pic.start()
     mixer_thread = Mixer_thread(mp3_dir)
     mixer_thread.start()
 
@@ -210,5 +217,5 @@ if __name__ == '__main__':
             last_press_time = time.time()
         if time.time() - last_press_time > random_display_start_time and time.time() - last_random_display_time > random_display_gap_time:
             logging.info("display_random_pic")
-            show_pic.display_random_pic()
+            # show_pic.display_random_pic()
             last_random_display_time = time.time()
