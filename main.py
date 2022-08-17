@@ -65,7 +65,7 @@ class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
         self.target_index = (self.index + 1) % len(self.mp3_paths)
 
 
-class Items:
+class ShowPic:
     def __init__(self, pic_dir):
         logging.info("epd4in01f Demo")
         self.epd = epd4in01f.EPD()
@@ -109,11 +109,11 @@ class Items:
             self.father._display_pic(self.pic_path)
 
     def display_pic(self, bmp_path):
+        if self.display_thread:
+            threading.Thread._Thread__stop(self.display_thread)
         self.index = self.target_index
-        display_thread = self.Display_pic_thread(self, bmp_path)
-        display_thread.start()
-        while self.target_index == self.index and display_thread.is_alive():
-            time.sleep(0.1)
+        self.display_thread = self.Display_pic_thread(self, bmp_path)
+        self.display_thread.start()
 
     def display_up_pic(self):
         self.target_index = (self.index + 1) % len(self.item_list)
@@ -128,6 +128,8 @@ class Items:
         self.display_pic(bmp_path)
 
     def display_random_pic(self):
+        while self.target_index == self.index and self.display_thread.is_alive():
+            time.sleep(0.1)
         self.target_index = random.choice(range(len(self.item_list)))
         logging.debug(f"self.target_index:{self.target_index}")
         bmp_path = self.item_list[self.target_index]
@@ -156,22 +158,23 @@ last_press_time = time.time()
 last_random_display_time = time.time()
 
 if __name__ == '__main__':
-    # items = Items(pic_dir)
+    show_pic = ShowPic(pic_dir)
+    show_pic.display_random_pic()
     mixer_thread = Mixer_thread(mp3_dir)
     mixer_thread.start()
 
     while True:
         if key_state[KEY_LEFT] == GPIO.LOW:
             logging.info("KEY_LEFT low")
-            # items.display_up_pic()
+            # show_pic.display_up_pic()
             mixer_thread.pre_music()
             last_press_time = time.time()
         elif key_state[KEY_RIGHT] == GPIO.LOW:
             logging.info("KEY_RIGHT low")
-            # items.display_down_pic()
+            # show_pic.display_down_pic()
             mixer_thread.next_music()
             last_press_time = time.time()
         if time.time() - last_press_time > random_display_start_time and time.time() - last_random_display_time > random_display_gap_time:
             logging.info("display_random_pic")
-            # items.display_random_pic()
+            show_pic.display_random_pic()
             last_random_display_time = time.time()
