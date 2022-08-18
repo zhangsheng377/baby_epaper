@@ -120,7 +120,7 @@ def _get_closest_color(color):
 
 def _trans_pic_color(img):
     img_array = np.array(img)
-    height, width = img_array.shape
+    height, width, channel_num = img_array.shape
     for h in range(height):
         for w in range(width):
             img_array[h][w] = _get_closest_color(img_array[h][w])
