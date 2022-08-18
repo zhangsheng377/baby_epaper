@@ -153,13 +153,20 @@ class ShowPic(threading.Thread):
     def _display_pic(self, pic_path):
         try:
             logging.debug(f"read bmp file. {pic_path}")
-            image = Image.open(pic_path)
-            image = image.resize((640, 400))
-            image = image.transpose(Image.FLIP_LEFT_RIGHT)  # 水平翻转
-            image = image.transpose(Image.FLIP_TOP_BOTTOM)  # 垂直翻转
-            logging.debug(
-                f"_trans_pic_color start. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            image = _trans_pic_color(image)
+            (filepath, filename) = os.path.split(pic_path)
+            cache_dir = os.path.join(filepath, '__cache')
+            os.makedirs(cache_dir, exist_ok=True)
+            cache_file_path = os.path.join(cache_dir, filename)
+            if not os.path.exists(cache_file_path):
+                image = Image.open(pic_path)
+                image = image.resize((640, 400))
+                image = image.transpose(Image.FLIP_LEFT_RIGHT)  # 水平翻转
+                image = image.transpose(Image.FLIP_TOP_BOTTOM)  # 垂直翻转
+                logging.debug(
+                    f"_trans_pic_color start. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                image = _trans_pic_color(image)
+                image.save(cache_file_path)
+            image = Image.open(cache_file_path)
             logging.debug(
                 f"display start. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             self.epd.display(self.epd.getbuffer(image))
