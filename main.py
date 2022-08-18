@@ -3,6 +3,8 @@
 import ctypes
 import glob
 import inspect
+from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import cpu_count
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -122,9 +124,12 @@ def _get_closest_color(color):
 def _trans_pic_color(img):
     img_array = np.array(img)
     height, width, channel_num = img_array.shape
+    # for h in range(height):
+    #     for w in range(width):
+    #         img_array[h][w] = _get_closest_color(img_array[h][w])
+    executor = ThreadPoolExecutor(max_workers=cpu_count())
     for h in range(height):
-        for w in range(width):
-            img_array[h][w] = _get_closest_color(img_array[h][w])
+        img_array[h] = np.array(list(executor.map(_get_closest_color, img_array[h])))
     return Image.fromarray(np.uint8(img_array))
 
 
@@ -152,6 +157,8 @@ class ShowPic(threading.Thread):
             image = image.resize((640, 400))
             image = image.transpose(Image.FLIP_LEFT_RIGHT)  # 水平翻转
             image = image.transpose(Image.FLIP_TOP_BOTTOM)  # 垂直翻转
+            logging.debug(
+                f"_trans_pic_color start. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             image = _trans_pic_color(image)
             logging.debug(
                 f"display start. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
