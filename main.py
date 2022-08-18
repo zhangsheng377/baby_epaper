@@ -27,7 +27,8 @@ KEY_LEFT = 23  # BCM引脚
 KEY_RIGHT = 22
 
 # logging.basicConfig(level=logging.INFO)
-logging.basicConfig(level=logging.DEBUG, filename="mylog.log")
+logging.basicConfig(level=logging.DEBUG, filename="mylog.log",
+                    format='%(asctime)s  %(filename)s  %(lineno)d  %(funcName)s : %(levelname)s  %(message)s')
 
 mp3_dir = 'data_pic_music/music'
 # pic_dir = 'data_pic_music/pic'
