@@ -4,6 +4,7 @@ import ctypes
 import glob
 import inspect
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from waveshare_epd import epd4in01f
 import traceback
@@ -33,6 +34,16 @@ mp3_dir = 'data_pic_music/music'
 pic_dir = 'data_test/pic'
 random_display_start_time = 30
 random_display_gap_time = 10
+
+color_act = [
+    [255, 255, 255],  # 白色
+    [0, 0, 0],  # 黑色
+    [0, 0, 255],  # 蓝色
+    [255, 128, 0],  # 橙色
+    [255, 255, 0],  # 黄色
+    [255, 0, 0],  # 红色
+    [0, 255, 0],  # 绿色
+]
 
 GPIO.setup(KEY_LEFT, GPIO.IN, GPIO.PUD_UP)  # 设置输入，上拉
 GPIO.setup(KEY_RIGHT, GPIO.IN, GPIO.PUD_UP)
@@ -92,6 +103,30 @@ class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
 #     _async_raise(thread.ident, SystemExit)
 
 
+def _get_color_distance(color_a, color_b):
+    return (color_a[0] - color_b[0]) ** 2 + (color_a[1] - color_b[1]) ** 2 + (color_a[2] - color_b[2]) ** 2
+
+
+def _get_closest_color(color):
+    min_distance = 255 ** 2 + 255 ** 2 + 255 ** 2 + 1
+    closest_color = color_act[0]
+    for color_act_ in color_act:
+        distance = _get_color_distance(color_act_, color)
+        if distance < min_distance:
+            min_distance = distance
+            closest_color = color_act_
+    return closest_color
+
+
+def _trans_pic_color(img):
+    img_array = np.array(img)
+    height, width = img_array.shape
+    for h in range(height):
+        for w in range(width):
+            img_array[h][w] = _get_closest_color(img_array[h][w])
+    return Image.fromarray(np.uint8(img_array))
+
+
 class ShowPic(threading.Thread):
     def __init__(self, pic_dir):
         threading.Thread.__init__(self)
@@ -112,13 +147,14 @@ class ShowPic(threading.Thread):
     def _display_pic(self, pic_path):
         try:
             logging.debug(f"read bmp file. {pic_path}")
-            Himage = Image.open(pic_path)
-            Himage = Himage.resize((640, 400))
-            Himage = Himage.transpose(Image.FLIP_LEFT_RIGHT)  # 水平翻转
-            Himage = Himage.transpose(Image.FLIP_TOP_BOTTOM)  # 垂直翻转
+            image = Image.open(pic_path)
+            image = image.resize((640, 400))
+            image = image.transpose(Image.FLIP_LEFT_RIGHT)  # 水平翻转
+            image = image.transpose(Image.FLIP_TOP_BOTTOM)  # 垂直翻转
+            image = _trans_pic_color(image)
             logging.debug(
                 f"display start. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            self.epd.display(self.epd.getbuffer(Himage))
+            self.epd.display(self.epd.getbuffer(image))
             logging.debug(
                 f"display over. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         except IOError as e:
@@ -128,7 +164,7 @@ class ShowPic(threading.Thread):
             epd4in01f.epdconfig.module_exit()
             exit()
 
-    class Display_pic_thread(threading.Thread):  # 继承父类threading.Thread
+    class DisplayPicThread(threading.Thread):  # 继承父类threading.Thread
         def __init__(self, father, pic_path):
             threading.Thread.__init__(self)
             self.pic_path = pic_path
@@ -145,7 +181,7 @@ class ShowPic(threading.Thread):
             # logging.debug(f"ShowPic display_pic self.display_thread:{self.display_thread}")
             return
         self.index = self.target_index
-        self.display_thread = self.Display_pic_thread(self, bmp_path)
+        self.display_thread = self.DisplayPicThread(self, bmp_path)
         self.display_thread.start()
 
     def display_up_pic(self):
