@@ -143,7 +143,7 @@ class ShowPic(threading.Thread):
         # self.epd.Clear()
         self.mp3_path = None
 
-        self.item_list = glob.glob(os.path.join(pic_dir, '*.bmp'))
+        self.item_list = glob.glob(os.path.join(pic_dir, '*[jpg,bmp,png]'))
         logging.info(f"ShowPic len(self.item_list):{len(self.item_list)}")
         self.index = 0
         self.target_index = self.index
