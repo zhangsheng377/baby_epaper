@@ -167,8 +167,9 @@ class ShowPic(threading.Thread):
                 time.sleep(0.1)
             logging.debug(
                 f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index} self.display_thread:{self.display_thread} thread over")
-        while self.target_index == self.index:
-            self.target_index = random.choice(range(len(self.item_list)))
+        if len(self.item_list) > 1:
+            while self.target_index == self.index:
+                self.target_index = random.choice(range(len(self.item_list)))
         logging.debug(f"ShowPic display_random_pic self.target_index:{self.target_index} self.index:{self.index}")
         bmp_path = self.item_list[self.target_index]
         self.display_pic(bmp_path)
@@ -224,6 +225,6 @@ if __name__ == '__main__':
             last_press_time = time.time()
             key_state[KEY_RIGHT] = KeyState.PRESS_UP
         if time.time() - last_press_time > random_display_start_time and time.time() - last_random_display_time > random_display_gap_time:
-            logging.info("display_random_pic")
+            # logging.info("display_random_pic")
             # show_pic.display_random_pic()
             last_random_display_time = time.time()
