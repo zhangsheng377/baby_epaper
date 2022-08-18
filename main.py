@@ -113,6 +113,7 @@ class ShowPic(threading.Thread):
         try:
             logging.debug(f"read bmp file. {pic_path}")
             Himage = Image.open(pic_path)
+            Himage = Himage.resize((640, 400))
             Himage = Himage.transpose(Image.FLIP_LEFT_RIGHT)  # 水平翻转
             Himage = Himage.transpose(Image.FLIP_TOP_BOTTOM)  # 垂直翻转
             logging.debug(
