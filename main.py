@@ -29,7 +29,8 @@ KEY_RIGHT = 22
 logging.basicConfig(level=logging.DEBUG, filename="mylog.log")
 
 mp3_dir = 'data_pic_music/music'
-pic_dir = 'data_pic_music/pic'
+# pic_dir = 'data_pic_music/pic'
+pic_dir = 'data_test/pic'
 random_display_start_time = 30
 random_display_gap_time = 10
 
@@ -37,6 +38,7 @@ GPIO.setup(KEY_LEFT, GPIO.IN, GPIO.PUD_UP)  # 设置输入，上拉
 GPIO.setup(KEY_RIGHT, GPIO.IN, GPIO.PUD_UP)
 
 mixer.init()
+mixer.music.set_volume(0.5)
 
 
 class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
