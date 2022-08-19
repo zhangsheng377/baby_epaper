@@ -72,6 +72,7 @@ class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
             logging.debug(f"Mixer_thread run self.target_index:{self.target_index}")
             if 0 <= self.target_index < len(self.mp3_paths):  # target_index有效
                 self.index = self.target_index
+                logging.info(f"Mixer_thread run mp3_path:{self.mp3_paths[self.index]}")
                 mixer.music.load(self.mp3_paths[self.index])
                 mixer.music.play()
                 while self.target_index == self.index and mixer.music.get_busy():
