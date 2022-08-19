@@ -33,7 +33,8 @@ logging.basicConfig(level=logging.DEBUG, filename="mylog.log",
                     format='%(asctime)s  %(filename)s  %(lineno)d  %(funcName)s : %(levelname)s  %(message)s')
 
 mp3_dir = 'data_pic_music/music'
-pic_dir = 'data_pic_music/pic'
+# pic_dir = 'data_pic_music/pic'
+pic_dir = 'data_pic_music/pic_bak'
 # pic_dir = 'data_test/pic'
 random_display_start_time = 30
 random_display_gap_time = 10
