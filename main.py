@@ -53,7 +53,7 @@ GPIO.setup(KEY_LEFT, GPIO.IN, GPIO.PUD_UP)  # 设置输入，上拉
 GPIO.setup(KEY_RIGHT, GPIO.IN, GPIO.PUD_UP)
 
 mixer.init()
-mixer.music.set_volume(0.1)
+mixer.music.set_volume(0.3)
 
 
 class Mixer_thread(threading.Thread):  # 继承父类threading.Thread
