@@ -114,11 +114,14 @@ def _get_color_distance(color_a, color_b):
 def _get_closest_color(color):
     min_distance = 255 ** 2 + 255 ** 2 + 255 ** 2 + 1
     closest_color = color_act[0]
-    for color_act_ in color_act:
-        distance = _get_color_distance(color_act_, color)
-        if distance < min_distance:
-            min_distance = distance
-            closest_color = color_act_
+    try:
+        for color_act_ in color_act:
+            distance = _get_color_distance(color_act_, color)
+            if distance < min_distance:
+                min_distance = distance
+                closest_color = color_act_
+    except:
+        traceback.print_exc()
     return closest_color
 
 
