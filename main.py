@@ -172,6 +172,8 @@ class ShowPic(threading.Thread):
             except:
                 traceback.print_exc()
                 image = Image.open(pic_path)
+                image = image.transpose(Image.FLIP_LEFT_RIGHT)  # 水平翻转
+                image = image.transpose(Image.FLIP_TOP_BOTTOM)  # 垂直翻转
             logging.debug(
                 f"display start. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             self.epd.display(self.epd.getbuffer(image))
