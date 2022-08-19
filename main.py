@@ -3,7 +3,7 @@
 import ctypes
 import glob
 import inspect
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from multiprocessing import cpu_count
 
 import numpy as np
@@ -138,7 +138,8 @@ def _trans_pic_color(img):
     # for h in range(height):
     #     for w in range(width):
     #         img_array[h][w] = _get_closest_color(img_array[h][w])
-    executor = ThreadPoolExecutor(max_workers=cpu_count())
+    # executor = ThreadPoolExecutor(max_workers=cpu_count())
+    executor = ProcessPoolExecutor(max_workers=cpu_count())
     for h in range(height):
         img_array[h] = np.array(list(executor.map(_get_closest_color, img_array[h])))
     return Image.fromarray(np.uint8(img_array))
