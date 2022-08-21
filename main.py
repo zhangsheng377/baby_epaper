@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from multiprocessing import cpu_count
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 from waveshare_epd import epd4in01f
 import traceback
 import termios
@@ -230,6 +230,8 @@ class ShowPic(threading.Thread):
                     image = image.resize((640, 400))
                     image = image.transpose(Image.FLIP_LEFT_RIGHT)  # 水平翻转
                     image = image.transpose(Image.FLIP_TOP_BOTTOM)  # 垂直翻转
+                    image = ImageEnhance.Color(image)
+                    image = image.enhance(factor=1.5)
                     logging.debug(
                         f"_trans_pic_color start. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                     # image = _trans_pic_color(image)
