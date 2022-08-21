@@ -247,6 +247,7 @@ class ShowPic(threading.Thread):
             self.epd.display(self.epd.getbuffer(image))
             logging.debug(
                 f"display over. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            time.sleep(20)
         except IOError as e:
             logging.info(e)
         except KeyboardInterrupt:
