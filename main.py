@@ -132,6 +132,10 @@ def _get_closest_color(color):
     return closest_color
 
 
+def _enhance_color(color):
+    return np.clip((2.0 * color - 150), 0, 255)
+
+
 def _trans_pic_color(img):
     img_array = np.array(img)
     height, width, channel_num = img_array.shape
@@ -141,7 +145,8 @@ def _trans_pic_color(img):
     # executor = ThreadPoolExecutor(max_workers=cpu_count())
     executor = ProcessPoolExecutor(max_workers=cpu_count())
     for h in range(height):
-        img_array[h] = np.array(list(executor.map(_get_closest_color, img_array[h])))
+        img_color = _enhance_color(img_array[h])
+        img_array[h] = np.array(list(executor.map(_get_closest_color, img_color)))
     return Image.fromarray(np.uint8(img_array))
 
 
