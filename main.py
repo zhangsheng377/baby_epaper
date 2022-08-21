@@ -168,34 +168,33 @@ def floyd_steinberg_dither(img):
             green_error = green_oldpixel - green_newpixel
             blue_error = blue_oldpixel - blue_newpixel
 
-
             if x < x_lim - 1:
-                red = pixel[x+1, y][0] + round(red_error * 7/16)
-                green = pixel[x+1, y][1] + round(green_error * 7/16)
-                blue = pixel[x+1, y][2] + round(blue_error * 7/16)
+                red = pixel[x + 1, y][0] + round(red_error * 7 / 16)
+                green = pixel[x + 1, y][1] + round(green_error * 7 / 16)
+                blue = pixel[x + 1, y][2] + round(blue_error * 7 / 16)
 
-                pixel[x+1, y] = (red, green, blue)
+                pixel[x + 1, y] = (red, green, blue)
 
             if x > 1 and y < y_lim - 1:
-                red = pixel[x-1, y+1][0] + round(red_error * 3/16)
-                green = pixel[x-1, y+1][1] + round(green_error * 3/16)
-                blue = pixel[x-1, y+1][2] + round(blue_error * 3/16)
+                red = pixel[x - 1, y + 1][0] + round(red_error * 3 / 16)
+                green = pixel[x - 1, y + 1][1] + round(green_error * 3 / 16)
+                blue = pixel[x - 1, y + 1][2] + round(blue_error * 3 / 16)
 
-                pixel[x-1, y+1] = (red, green, blue)
+                pixel[x - 1, y + 1] = (red, green, blue)
 
             if y < y_lim - 1:
-                red = pixel[x, y+1][0] + round(red_error * 5/16)
-                green = pixel[x, y+1][1] + round(green_error * 5/16)
-                blue = pixel[x, y+1][2] + round(blue_error * 5/16)
+                red = pixel[x, y + 1][0] + round(red_error * 5 / 16)
+                green = pixel[x, y + 1][1] + round(green_error * 5 / 16)
+                blue = pixel[x, y + 1][2] + round(blue_error * 5 / 16)
 
-                pixel[x, y+1] = (red, green, blue)
+                pixel[x, y + 1] = (red, green, blue)
 
             if x < x_lim - 1 and y < y_lim - 1:
-                red = pixel[x+1, y+1][0] + round(red_error * 1/16)
-                green = pixel[x+1, y+1][1] + round(green_error * 1/16)
-                blue = pixel[x+1, y+1][2] + round(blue_error * 1/16)
+                red = pixel[x + 1, y + 1][0] + round(red_error * 1 / 16)
+                green = pixel[x + 1, y + 1][1] + round(green_error * 1 / 16)
+                blue = pixel[x + 1, y + 1][2] + round(blue_error * 1 / 16)
 
-                pixel[x+1, y+1] = (red, green, blue)
+                pixel[x + 1, y + 1] = (red, green, blue)
 
     return img
 
@@ -223,7 +222,7 @@ class ShowPic(threading.Thread):
             (filepath, filename) = os.path.split(pic_path)
             cache_dir = os.path.join(filepath, '__cache')
             os.makedirs(cache_dir, exist_ok=True)
-            cache_file_path = os.path.join(cache_dir, filename)
+            cache_file_path = os.path.join(cache_dir, filename + '.bmp')
             try:
                 if not os.path.exists(cache_file_path):
                     image = Image.open(pic_path)
