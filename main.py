@@ -38,6 +38,7 @@ pic_dir = 'data_pic_music/pic'
 # pic_dir = 'data_test/pic'
 random_display_start_time = 30
 random_display_gap_time = 10
+pic_display_time = 60
 
 color_act = [
     [255, 255, 255],  # 白色
@@ -247,7 +248,7 @@ class ShowPic(threading.Thread):
             self.epd.display(self.epd.getbuffer(image))
             logging.debug(
                 f"display over. {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            time.sleep(20)
+            time.sleep(pic_display_time)
         except IOError as e:
             logging.info(e)
         except KeyboardInterrupt:
